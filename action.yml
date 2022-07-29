@@ -18,7 +18,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: install 
+    - name: instal
       shell: bash
       run: |
         set -x
@@ -33,12 +33,12 @@ runs:
 
         echo "Download Compose ${{ inputs.version }} for ${flavor} from ${DOWNLOAD_URL}"
         mkdir -p ~/.docker/cli-plugins/
-        curl -fsSL "$DOWNLOAD_URL" -o ~/.docker/cli-plugins/docker-compose
+        test -f ~/.docker/cli-plugins/docker-compose || curl -fsSL "$DOWNLOAD_URL" -o ~/.docker/cli-plugins/docker-compose
         chmod +x ~/.docker/cli-plugins/docker-compose
     - name: alias docker-compose
       if: ${{ inputs.legacy }}
       shell: bash
       run: |
         mkdir -p ~/.local/bin/
-        ln -s ~/.docker/cli-plugins/docker-compose ~/.local/bin/docker-compose 
-  
+        ln -fs ~/.docker/cli-plugins/docker-compose ~/.local/bin/docker-compose
+        echo "${HOME}/.local/bin" >> $GITHUB_PATH
