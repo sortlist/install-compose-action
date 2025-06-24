@@ -14,6 +14,10 @@ inputs:
     description: 'Also install as legacy "docker-compose"'
     required: false
     default: true
+  artifact-url:
+    description: 'Direct URL to docker-compose artifact (zip file)'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -26,14 +30,28 @@ runs:
         arch="$(uname)-$(uname -m)"
         flavor=$(echo $arch | tr '[:upper:]' '[:lower:]' )
 
-        DOWNLOAD_URL="https://github.com/docker/compose/releases/download/${{ inputs.version }}/docker-compose-${flavor}"
-        if [[ "${{ inputs.version }}" == "latest" ]]; then
-          DOWNLOAD_URL=$(curl -fL https://api.github.com/repos/docker/compose/releases/latest | jq -r '.assets[] | select(.name == "docker-compose-linux-x86_64") | .browser_download_url')
+        if [[ -n "${{ inputs.artifact-url }}" ]]; then
+          DOWNLOAD_URL="${{ inputs.artifact-url }}"
+          echo "Download Compose from artifact URL: ${DOWNLOAD_URL}"
+          mkdir -p ~/.docker/cli-plugins/
+          if [[ "$DOWNLOAD_URL" == *.zip ]]; then
+            curl -fsSL "$DOWNLOAD_URL" -o /tmp/compose-artifact.zip
+            unzip -o /tmp/compose-artifact.zip -d /tmp/
+            mv /tmp/compose-linux-* ~/.docker/cli-plugins/docker-compose
+            rm -f /tmp/compose-artifact.zip
+          else
+            curl -fsSL "$DOWNLOAD_URL" -o ~/.docker/cli-plugins/docker-compose
+          fi
+        else
+          DOWNLOAD_URL="https://github.com/docker/compose/releases/download/${{ inputs.version }}/docker-compose-${flavor}"
+          if [[ "${{ inputs.version }}" == "latest" ]]; then
+            DOWNLOAD_URL=$(curl -fL https://api.github.com/repos/docker/compose/releases/latest | jq -r '.assets[] | select(.name == "docker-compose-linux-x86_64") | .browser_download_url')
+          fi
+          echo "Download Compose ${{ inputs.version }} for ${flavor} from ${DOWNLOAD_URL}"
+          mkdir -p ~/.docker/cli-plugins/
+          test -f ~/.docker/cli-plugins/docker-compose || curl -fsSL "$DOWNLOAD_URL" -o ~/.docker/cli-plugins/docker-compose
         fi
-
-        echo "Download Compose ${{ inputs.version }} for ${flavor} from ${DOWNLOAD_URL}"
-        mkdir -p ~/.docker/cli-plugins/
-        test -f ~/.docker/cli-plugins/docker-compose || curl -fsSL "$DOWNLOAD_URL" -o ~/.docker/cli-plugins/docker-compose
+        
         chmod +x ~/.docker/cli-plugins/docker-compose
     - name: alias docker-compose
       if: ${{ inputs.legacy }}
