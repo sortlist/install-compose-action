@@ -37,7 +37,7 @@ runs:
           if [[ "$DOWNLOAD_URL" == *.zip ]]; then
             curl -fsSL "$DOWNLOAD_URL" -o /tmp/compose-artifact.zip
             unzip -o /tmp/compose-artifact.zip -d /tmp/
-            mv /tmp/compose-linux-* ~/.docker/cli-plugins/docker-compose
+            mv /tmp/docker-compose-linux-* ~/.docker/cli-plugins/docker-compose 2>/dev/null || mv /tmp/compose-linux-* ~/.docker/cli-plugins/docker-compose
             rm -f /tmp/compose-artifact.zip
           else
             curl -fsSL "$DOWNLOAD_URL" -o ~/.docker/cli-plugins/docker-compose
