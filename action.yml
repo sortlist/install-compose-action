@@ -9,7 +9,7 @@ inputs:
   version:
     description: 'Compose release (example: v2.2.0)'
     required: false
-    default: latest
+    default: v2.40.0
   legacy:
     description: 'Also install as legacy "docker-compose"'
     required: false
